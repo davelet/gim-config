@@ -1,0 +1,17 @@
+[package]
+name = "gim-config"
+version = "0.1.0"
+edition = "2024"
+description = "A configuration management library for GIM applications"
+authors = ["Sheldon Wei<sheldon.sh.hb@gmail.com>"]
+license = "MIT"
+repository = "https://github.com/davelet/gim-config"
+
+[dependencies]
+dirs = "6.0.0"
+toml = "0.8.22"
+
+[profile.release]
+lto = true
+opt-level = 'z'
+codegen-units = 1
