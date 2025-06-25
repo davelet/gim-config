@@ -1,19 +1,47 @@
-use std::{fs, io::{Error, ErrorKind, Write as _, Result}};
 use std::path::PathBuf;
+use std::{
+    fs,
+    io::{Error, ErrorKind, Result, Write as _},
+};
 use toml::{Value, map};
 
 use crate::directory::config_dir;
 
+/// Returns the path to the configuration file.
+///
+/// This function gets the configuration directory and appends the filename "config.toml".
+///
+/// # Returns
+///
+/// * `Result<PathBuf>` - The path to the configuration file or an error
 fn get_config_file() -> Result<PathBuf> {
     let config_dir = config_dir()?;
     let config_file = config_dir.join("config.toml");
     Ok(config_file)
 }
 
+/// Gets the current configuration.
+///
+/// This is a convenience function that calls `get_config_into_toml` with logging enabled.
+///
+/// # Returns
+///
+/// * `Result<Value>` - The configuration as a TOML Value or an error
 pub fn get_config() -> Result<Value> {
     get_config_into_toml(true)
 }
 
+/// Reads or creates the configuration file and returns its contents as a TOML Value.
+///
+/// If the configuration file doesn't exist, this function creates a new one with default values.
+///
+/// # Arguments
+///
+/// * `log_dir` - Whether to print the configuration file path to stdout
+///
+/// # Returns
+///
+/// * `Result<Value>` - The configuration as a TOML Value or an error
 pub fn get_config_into_toml(log_dir: bool) -> Result<Value> {
     let config_file = get_config_file().expect("Failed to get config file");
     if !config_file.exists() {
@@ -52,11 +80,21 @@ pub fn get_config_into_toml(log_dir: bool) -> Result<Value> {
         println!("Config file is {}", config_file.display());
     }
     let content = fs::read_to_string(&config_file)?;
-    let config: Value = toml::from_str(&content)
-        .map_err(|e| Error::new(ErrorKind::InvalidData, e))?;
+    let config: Value =
+        toml::from_str(&content).map_err(|e| Error::new(ErrorKind::InvalidData, e))?;
     Ok(config)
 }
 
+/// Retrieves a specific value from the configuration.
+///
+/// # Arguments
+///
+/// * `section` - The section name in the configuration
+/// * `key` - The key name within the section
+///
+/// # Returns
+///
+/// * `Result<Value>` - The requested value or an error if the section or key doesn't exist
 pub fn get_config_value(section: &str, key: &str) -> Result<Value> {
     let config = get_config()?;
     let section_table = config
@@ -86,6 +124,19 @@ pub fn get_config_value(section: &str, key: &str) -> Result<Value> {
         .map(|v| v.clone())
 }
 
+/// Updates a specific value in the configuration.
+///
+/// If the value is the same as the existing one, no update is performed.
+///
+/// # Arguments
+///
+/// * `section` - The section name in the configuration
+/// * `key` - The key name within the section
+/// * `value` - The new value to set
+///
+/// # Returns
+///
+/// * `Result<()>` - Success or an error if the section doesn't exist or saving fails
 pub fn update_config_value(section: &str, key: &str, value: Value) -> Result<()> {
     let mut config = get_config_into_toml(false)?;
     let section_table = config
@@ -115,9 +166,18 @@ pub fn update_config_value(section: &str, key: &str, value: Value) -> Result<()>
     Ok(())
 }
 
+/// Saves the provided configuration to the config file.
+///
+/// # Arguments
+///
+/// * `config` - The configuration Value to save
+///
+/// # Returns
+///
+/// * `Result<()>` - Success or an error if serialization or writing fails
 pub fn save_config(config: &Value) -> Result<()> {
-    let updated_content = toml::to_string(config)
-        .map_err(|e| Error::new(ErrorKind::InvalidData, e))?;
+    let updated_content =
+        toml::to_string(config).map_err(|e| Error::new(ErrorKind::InvalidData, e))?;
     let config_dir = get_config_file()?;
     fs::write(&config_dir, updated_content)?;
     Ok(())
