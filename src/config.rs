@@ -22,12 +22,21 @@ fn get_config_file() -> Result<PathBuf> {
 
 /// Gets the current configuration.
 ///
-/// This is a convenience function that calls `get_config_into_toml` with logging enabled.
+/// This is a convenience function that calls `get_config_into_toml` with logging disabled.
 ///
 /// # Returns
 ///
 /// * `Result<Value>` - The configuration as a TOML Value or an error
 pub fn get_config() -> Result<Value> {
+    get_config_into_toml(false)
+}
+
+/// Gets the current configuration and prints the config file path to stdout.
+///
+/// # Returns
+///
+/// * `Result<Value>` - The configuration as a TOML Value or an error
+pub fn get_config_and_print() -> Result<Value> {
     get_config_into_toml(true)
 }
 
@@ -42,7 +51,7 @@ pub fn get_config() -> Result<Value> {
 /// # Returns
 ///
 /// * `Result<Value>` - The configuration as a TOML Value or an error
-pub fn get_config_into_toml(log_dir: bool) -> Result<Value> {
+fn get_config_into_toml(log_dir: bool) -> Result<Value> {
     let config_file = get_config_file().expect("Failed to get config file");
     if !config_file.exists() {
         if let Some(parent) = config_file.parent() {
